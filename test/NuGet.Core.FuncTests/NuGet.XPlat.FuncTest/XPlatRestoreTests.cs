@@ -54,6 +54,8 @@ namespace NuGet.XPlat.FuncTest
                     packagesDir,
                     "--source",
                     sourceUri,
+                    "--verbosity",
+                    "verbose",
                     "--no-cache"
                 };
 
