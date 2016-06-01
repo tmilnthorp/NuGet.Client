@@ -68,6 +68,9 @@ namespace NuGet.XPlat.FuncTest
                 // Act
                 int exitCode = Program.MainInternal(args.ToArray(), log);
 
+                System.Console.WriteLine(log.ShowErrors());
+                System.Console.WriteLine(log.ShowMessages());
+
                 // Assert
                 Assert.Equal(string.Empty, log.ShowErrors());
                 Assert.Equal(0, exitCode);
