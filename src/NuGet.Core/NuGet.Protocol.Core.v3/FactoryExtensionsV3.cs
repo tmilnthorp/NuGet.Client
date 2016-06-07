@@ -68,6 +68,8 @@ namespace NuGet.Protocol
             yield return new Lazy<INuGetResourceProvider>(() => new LocalPackageMetadataResourceProvider());
             yield return new Lazy<INuGetResourceProvider>(() => new LocalPackageSearchResourceProvider());
 
+            yield return new Lazy<INuGetResourceProvider>(() => new PackageSourceDiagnosticsResourceProvider());
+
             yield break;
         }
     }

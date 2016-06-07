@@ -13,6 +13,7 @@ using NuGet.ProjectManagement;
 using NuGet.Protocol.Core.Types;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+using NuGet.Protocol;
 
 namespace NuGet.CommandLine
 {
@@ -318,6 +319,18 @@ namespace NuGet.CommandLine
                 CancellationToken.None);
 
             project.Save();
+
+            Console.WriteLine();
+            foreach (var sourceRepository in sourceRepositories)
+            {
+                var dr = await sourceRepository.GetResourceAsync<PackageSourceDiagnosticsResource>(CancellationToken.None);
+                var d = dr.PackageSourceDiagnostics;
+
+                foreach (var msg in d.DiagnosticMessages)
+                {
+                    Console.WriteWarning(msg.Details);
+                }
+            }
         }
 
         private CommandLineSourceRepositoryProvider GetSourceRepositoryProvider()
