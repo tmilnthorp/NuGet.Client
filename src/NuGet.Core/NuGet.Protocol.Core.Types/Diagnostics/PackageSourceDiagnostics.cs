@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -16,13 +17,13 @@ namespace NuGet.Protocol
         private static readonly TimeSpan SlowSourceThreshold = TimeSpan.FromSeconds(5.0);
         private static readonly TimeSpan UnresponsiveSourceThreshold = TimeSpan.FromSeconds(5.0);
 
-        private readonly IList<DiagnosticEvent> _diagnosticEvents = new List<DiagnosticEvent>();
+        private readonly ConcurrentQueue<DiagnosticEvent> _diagnosticEvents = new ConcurrentQueue<DiagnosticEvent>();
 
         public PackageSource PackageSource { get; }
 
         public IEnumerable<DiagnosticEvent> Events => _diagnosticEvents;
 
-        public IReadOnlyList<DiagnosticMessage> DiagnosticMessages
+        public IEnumerable<DiagnosticMessage> DiagnosticMessages
         {
             get
             {
@@ -32,45 +33,45 @@ namespace NuGet.Protocol
 
                 if (metrics.TotalRequestsCount == 0)
                 {
-                    return messages;
+                    yield break;
                 }
 
                 if (metrics.SlowRequestsCount > 0)
                 {
-                    messages.Add(new DiagnosticMessage(
+                    yield return new DiagnosticMessage(
                         SourceStatus.SlowSource,
-                        $"[{PackageSource.Name}] {FormatRate(metrics.SlowRequestsCount, metrics.TotalRequestsCount)} of source requests took more time than expected."));
+                        $"[{PackageSource.Name}] {FormatRate(metrics.SlowRequestsCount, metrics.TotalRequestsCount)} of source requests took more time than expected.");
                 }
 
                 if (metrics.CancelledRequestsCount > 0)
                 {
-                    messages.Add(new DiagnosticMessage(
+                    yield return new DiagnosticMessage(
                         SourceStatus.SlowSource,
-                        $"[{PackageSource.Name}] {FormatRate(metrics.CancelledRequestsCount, metrics.TotalRequestsCount)} of source requests were cancelled."));
+                        $"[{PackageSource.Name}] {FormatRate(metrics.CancelledRequestsCount, metrics.TotalRequestsCount)} of source requests were cancelled.");
                 }
 
                 if (metrics.FailedRequestsCount > 0)
                 {
-                    messages.Add(new DiagnosticMessage(
+                    yield return new DiagnosticMessage(
                         SourceStatus.SlowSource,
-                        $"[{PackageSource.Name}] {FormatRate(metrics.FailedRequestsCount, metrics.TotalRequestsCount)} of source requests failed."));
+                        $"[{PackageSource.Name}] {FormatRate(metrics.FailedRequestsCount, metrics.TotalRequestsCount)} of source requests failed.");
                 }
 
                 if (metrics.IncompleteRequestsCount > 0)
                 {
-                    messages.Add(new DiagnosticMessage(
+                    yield return new DiagnosticMessage(
                         SourceStatus.SlowSource,
-                        $"[{PackageSource.Name}] {FormatRate(metrics.IncompleteRequestsCount, metrics.TotalRequestsCount)} of source requests are incomplete."));
+                        $"[{PackageSource.Name}] {FormatRate(metrics.IncompleteRequestsCount, metrics.TotalRequestsCount)} of source requests are incomplete.");
                 }
 
                 if (metrics.TimedOutRequestsCount > 0)
                 {
-                    messages.Add(new DiagnosticMessage(
+                    yield return new DiagnosticMessage(
                         SourceStatus.UnresponsiveSource,
-                        $"[{PackageSource.Name}] {FormatRate(metrics.TimedOutRequestsCount, metrics.TotalRequestsCount)} of source requests timed out"));
+                        $"[{PackageSource.Name}] {FormatRate(metrics.TimedOutRequestsCount, metrics.TotalRequestsCount)} of source requests timed out");
                 }
 
-                return messages;
+                yield break;
             }
         }
 
@@ -78,16 +79,17 @@ namespace NuGet.Protocol
         {
             if (numerator == 0)
             {
-                return "None";
+                return $"None of {denominator}";
             }
 
             if (numerator == denominator)
             {
-                return "All";
+                return $"All of {denominator}";
             }
 
-            var rate = (double)numerator / denominator;
-            return rate.ToString("0.0%");
+            //var rate = (double)numerator / denominator;
+            //return rate.ToString("0.0%");
+            return $"{numerator}/{denominator}";
         }
 
         public PackageSourceDiagnostics(PackageSource packageSource)
@@ -102,7 +104,7 @@ namespace NuGet.Protocol
 
         public void RecordEvent(DiagnosticEvent @event)
         {
-            _diagnosticEvents.Add(@event);
+            _diagnosticEvents.Enqueue(@event);
         }
 
         public async Task<T> TraceAsync<T>(string resource, string operation, Func<CancellationToken, Task<T>> taskFactory, CancellationToken cancellationToken)
@@ -185,15 +187,19 @@ namespace NuGet.Protocol
         public DiagnosticMetrics UpdateMetrics(DateTime referenceTime)
         {
             var requests = Events
+                .ToArray()
                 .GroupBy(
                     e => e.Tag,
                     (k, es) =>
                     {
-                        var startedAt = es.First(e => e.Is(EventType.Started)).EventTime;
                         var completeEvent = es.FirstOrDefault(e => !e.Is(EventType.Started));
-                        return completeEvent != null
-                            ? new { result = completeEvent?.EventType, duration = completeEvent.Latency }
-                            : new { result = completeEvent?.EventType, duration = referenceTime - startedAt };
+                        if (completeEvent != null)
+                        {
+                            return new { result = completeEvent?.EventType, duration = completeEvent.Latency };
+                        }
+
+                        var startedAt = es.First(e => e.Is(EventType.Started)).EventTime;
+                        return new { result = completeEvent?.EventType, duration = referenceTime - startedAt };
                     });
 
             _metrics = requests

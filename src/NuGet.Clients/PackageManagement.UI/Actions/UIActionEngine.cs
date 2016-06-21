@@ -199,9 +199,13 @@ namespace NuGet.PackageManagement.UI
             DependencyObject windowOwner,
             CancellationToken token)
         {
+            var worker = new PackageSourceDiagnosticsWorker(uiService);
+
             try
             {
                 uiService.ShowProgressDialog(windowOwner);
+
+                worker.Start(token);
 
                 var actions = await resolveActionsAsync();
                 var results = GetPreviewResults(actions);
@@ -248,6 +252,8 @@ namespace NuGet.PackageManagement.UI
             }
             finally
             {
+                await worker.StopAsync(token);
+
                 uiService.CloseProgressDialog();
             }
         }
