@@ -388,6 +388,7 @@ function New-SilverlightClassLibrary {
 
     try
     {
+        throw "SKIPPING ALL SILVERLIGHT"
         New-Project SilverlightClassLibrary $ProjectName $SolutionFolder
     }
     catch {
@@ -405,6 +406,7 @@ function New-SilverlightApplication {
 
     try
     {
+        throw "SKIPPING ALL SILVERLIGHT"
         New-Project SilverlightProject $ProjectName $SolutionFolder
     }
     catch {
