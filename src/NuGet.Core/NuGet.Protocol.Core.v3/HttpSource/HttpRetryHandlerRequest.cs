@@ -3,7 +3,6 @@
 
 using System;
 using System.Net.Http;
-using System.Threading;
 
 namespace NuGet.Protocol
 {
@@ -14,20 +13,18 @@ namespace NuGet.Protocol
     public class HttpRetryHandlerRequest
     {
         public static readonly TimeSpan DefaultDownloadTimeout = TimeSpan.FromSeconds(60);
+        public static readonly TimeSpan DefaultRequestTimeout = TimeSpan.FromSeconds(100);
+        public static readonly TimeSpan DefaultRetryDelay = TimeSpan.FromMilliseconds(200);
 
-        public HttpRetryHandlerRequest(HttpClient httpClient, Func<HttpRequestMessage> requestFactory)
+        public HttpRetryHandlerRequest(Func<HttpRequestMessage> requestFactory)
         {
-            HttpClient = httpClient;
-            RequestFactory = requestFactory;
-            CompletionOption = HttpCompletionOption.ResponseHeadersRead;
-            MaxTries = 3;
-            RequestTimeout = TimeSpan.FromSeconds(100);
-            RetryDelay = TimeSpan.FromMilliseconds(200);
-            DownloadTimeout = DefaultDownloadTimeout;
-        }
+            if (requestFactory == null)
+            {
+                throw new ArgumentNullException(nameof(requestFactory));
+            }
 
-        /// <summary>The HTTP client to use for each request attempt.</summary>
-        public HttpClient HttpClient { get; }
+            RequestFactory = requestFactory;
+        }
 
         /// <summary>
         /// The factory that generates each request message. This factory is invoked for each attempt.
@@ -35,20 +32,20 @@ namespace NuGet.Protocol
         public Func<HttpRequestMessage> RequestFactory { get; }
 
         /// <summary>The HTTP completion option to use for the next attempt.</summary>
-        public HttpCompletionOption CompletionOption { get; set; }
+        public HttpCompletionOption CompletionOption { get; set; } = HttpCompletionOption.ResponseHeadersRead;
 
         /// <summary>The maximum number of times to try the request. This value includes the initial attempt.</summary>
         /// <remarks>This API is intended only for testing purposes and should not be used in product code.</remarks>
-        public int MaxTries { get; set; }
+        public int MaxTries { get; set; } = 3;
 
         /// <summary>How long to wait on the request to come back with a response.</summary>
-        public TimeSpan RequestTimeout { get; set; }
+        public TimeSpan RequestTimeout { get; set; } = DefaultRequestTimeout;
 
         /// <summary>How long to wait before trying again after a failed request.</summary>
         /// <summary>This API is intended only for testing purposes and should not be used in product code.</summary>
-        public TimeSpan RetryDelay { get; set; }
+        public TimeSpan RetryDelay { get; set; } = DefaultRetryDelay;
 
         /// <summary>The timeout to apply to <see cref="DownloadTimeoutStream"/> instances.</summary>
-        public TimeSpan DownloadTimeout { get; set; }
+        public TimeSpan DownloadTimeout { get; set; } = DefaultDownloadTimeout;
     }
 }

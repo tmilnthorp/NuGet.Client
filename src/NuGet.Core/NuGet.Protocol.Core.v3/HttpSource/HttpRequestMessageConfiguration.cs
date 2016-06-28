@@ -21,6 +21,5 @@ namespace NuGet.Protocol
 
         public ILogger Logger { get; }
         public bool PromptOn403 { get; }
-        public TimeSpan RequestTimeout { get; } = HttpSourceRequest.DefaultRequestTimeout;
     }
 }

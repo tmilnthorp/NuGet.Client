@@ -461,6 +461,7 @@ namespace NuGet.Protocol.Tests
                 RetryHandlerMock
                     .Setup(x => x.SendAsync(
                         It.IsAny<HttpRetryHandlerRequest>(),
+                        It.IsAny<HttpClient>(),
                         It.IsAny<ILogger>(),
                         It.IsAny<CancellationToken>()))
                     .Returns(() => Task.FromResult(responses[index++ % responses.Length]));
@@ -472,6 +473,7 @@ namespace NuGet.Protocol.Tests
                 RetryHandlerMock
                     .Setup(x => x.SendAsync(
                         It.IsAny<HttpRetryHandlerRequest>(),
+                        It.IsAny<HttpClient>(),
                         It.IsAny<ILogger>(),
                         It.IsAny<CancellationToken>()))
                     .Returns<HttpRetryHandlerRequest, ILogger, CancellationToken>((r, _, __) => responseFactory(r));

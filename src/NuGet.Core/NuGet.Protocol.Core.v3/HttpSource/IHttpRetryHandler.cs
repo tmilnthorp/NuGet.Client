@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +12,7 @@ namespace NuGet.Protocol
     {
         Task<HttpResponseMessage> SendAsync(
             HttpRetryHandlerRequest request,
+            HttpClient httpClient,
             ILogger log,
             CancellationToken cancellationToken);
     }

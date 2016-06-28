@@ -35,7 +35,7 @@ namespace NuGet.Protocol
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var configuration = request.GetOrCreateConfiguration();
+            var requestTimeout = request.GetRequestTimeout() ?? HttpSourceRequest.DefaultRequestTimeout;
 
             var tag = Guid.NewGuid().ToString();
             _diagnostics.RecordEvent(DiagnosticEvents.Started(_packageSource.Name, request.RequestUri.ToString(), tag));
@@ -48,14 +48,14 @@ namespace NuGet.Protocol
                 Strings.Http_Timeout,
                 request.Method,
                 request.RequestUri.ToString(),
-                (int)configuration.RequestTimeout.TotalMilliseconds);
+                (int)requestTimeout.TotalMilliseconds);
 
             HttpResponseMessage response;
             try
             {
                 response = await TimeoutUtility.StartWithTimeout(
                     timeoutToken => base.SendAsync(request, timeoutToken),
-                    configuration.RequestTimeout,
+                    requestTimeout,
                     timeoutMessage,
                     cancellationToken);
             }

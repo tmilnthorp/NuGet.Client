@@ -232,7 +232,7 @@ namespace NuGet.Protocol
             await EnsureHttpClientAsync();
 
             // Build the retriable request.
-            var request = new HttpRetryHandlerRequest(_httpClient, requestFactory)
+            var request = new HttpRetryHandlerRequest(requestFactory)
             {
                 RequestTimeout = requestTimeout,
                 DownloadTimeout = downloadTimeout
@@ -244,7 +244,7 @@ namespace NuGet.Protocol
             HttpResponseMessage response;
             try
             {
-                response = await RetryHandler.SendAsync(request, log, cancellationToken);
+                response = await RetryHandler.SendAsync(request, _httpClient, log, cancellationToken);
             }
             catch
             {

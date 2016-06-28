@@ -10,6 +10,7 @@ namespace NuGet.Protocol
     public static class HttpRequestMessageExtensions
     {
         private static readonly string NuGetConfigurationKey = "NuGet_Configuration";
+        private static readonly string NuGetRequestTimeoutKey = "NuGet_RequestTimeout";
 
         /// <summary>
         /// Clones an <see cref="HttpRequestMessage" /> request.
@@ -74,6 +75,32 @@ namespace NuGet.Protocol
             }
 
             request.Properties[NuGetConfigurationKey] = configuration;
+        }
+
+        public static TimeSpan? GetRequestTimeout(this HttpRequestMessage request)
+        {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            object result;
+            if (request.Properties.TryGetValue(NuGetRequestTimeoutKey, out result) && result is TimeSpan)
+            {
+                return (TimeSpan)result;
+            }
+
+            return null;
+        }
+
+        public static void SetRequestTimeout(this HttpRequestMessage request, TimeSpan requestTimeout)
+        {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            request.Properties[NuGetRequestTimeoutKey] = requestTimeout;
         }
 
         private static T GetProperty<T>(this HttpRequestMessage request, string key)

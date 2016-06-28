@@ -109,9 +109,9 @@ namespace NuGet.Protocol.Tests
             };
 
             var retryHandler = new HttpRetryHandler();
-            var testHandler = new TestHandler(handler);
+            var testHandler = new LambdaMessageHandler(handler);
             var httpClient = new HttpClient(testHandler);
-            var request = new HttpRetryHandlerRequest(httpClient, () => new HttpRequestMessage(HttpMethod.Get, TestUrl))
+            var request = new HttpRetryHandlerRequest(() => new HttpRequestMessage(HttpMethod.Get, TestUrl))
             {
                 MaxTries = MaxTries,
                 RequestTimeout = Timeout.InfiniteTimeSpan,
@@ -120,7 +120,7 @@ namespace NuGet.Protocol.Tests
             var log = new TestLogger();
 
             // Act
-            using (await retryHandler.SendAsync(request, log, CancellationToken.None))
+            using (await retryHandler.SendAsync(request, httpClient, log, CancellationToken.None))
             {
             }
 
@@ -142,9 +142,9 @@ namespace NuGet.Protocol.Tests
             };
 
             var retryHandler = new HttpRetryHandler();
-            var testHandler = new TestHandler(handler);
+            var testHandler = new LambdaMessageHandler(handler);
             var httpClient = new HttpClient(testHandler);
-            var request = new HttpRetryHandlerRequest(httpClient, () => new HttpRequestMessage(HttpMethod.Get, TestUrl))
+            var request = new HttpRetryHandlerRequest(() => new HttpRequestMessage(HttpMethod.Get, TestUrl))
             {
                 MaxTries = MaxTries,
                 RequestTimeout = LargeTimeout,
@@ -153,7 +153,7 @@ namespace NuGet.Protocol.Tests
             var log = new TestLogger();
 
             // Act
-            using (await retryHandler.SendAsync(request, log, CancellationToken.None))
+            using (await retryHandler.SendAsync(request, httpClient, log, CancellationToken.None))
             {
             }
 
@@ -162,53 +162,18 @@ namespace NuGet.Protocol.Tests
         }
 
         [Fact]
-        public async Task HttpRetryHandler_CancelsRequestAfterTimeout()
-        {
-            // Arrange
-            CancellationToken requestToken = CancellationToken.None;
-            Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler = async (requestMessage, token) =>
-            {
-                requestToken = token;
-                await Task.Delay(LargeTimeout, token);
-                return new HttpResponseMessage(HttpStatusCode.OK);
-            };
-
-            var retryHandler = new HttpRetryHandler();
-            var testHandler = new TestHandler(handler);
-            var httpClient = new HttpClient(testHandler);
-            var request = new HttpRetryHandlerRequest(httpClient, () => new HttpRequestMessage(HttpMethod.Get, TestUrl))
-            {
-                MaxTries = 1,
-                RequestTimeout = SmallTimeout,
-                RetryDelay = TimeSpan.Zero
-            };
-
-            // Act
-            Func<Task> actionAsync = () => retryHandler.SendAsync(
-                request,
-                new TestLogger(),
-                CancellationToken.None);
-
-            // Assert
-            await Assert.ThrowsAsync<TimeoutException>(actionAsync);
-            Assert.True(requestToken.CanBeCanceled);
-            Assert.True(requestToken.IsCancellationRequested);
-        }
-
-        [Fact]
         public async Task HttpRetryHandler_ThrowsTimeoutExceptionForTimeout()
         {
             // Arrange
-            Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler = async (requestMessage, token) =>
+            Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler = (requestMessage, token) =>
             {
-                await Task.Delay(LargeTimeout);
-                return new HttpResponseMessage(HttpStatusCode.OK);
+                throw new TimeoutException();
             };
 
             var retryHandler = new HttpRetryHandler();
-            var testHandler = new TestHandler(handler);
+            var testHandler = new LambdaMessageHandler(handler);
             var httpClient = new HttpClient(testHandler);
-            var request = new HttpRetryHandlerRequest(httpClient, () => new HttpRequestMessage(HttpMethod.Get, TestUrl))
+            var request = new HttpRetryHandlerRequest(() => new HttpRequestMessage(HttpMethod.Get, TestUrl))
             {
                 MaxTries = 1,
                 RequestTimeout = TimeSpan.Zero,
@@ -218,6 +183,7 @@ namespace NuGet.Protocol.Tests
             // Act
             Func<Task> actionAsync = () => retryHandler.SendAsync(
                 request,
+                httpClient, 
                 new TestLogger(),
                 CancellationToken.None);
 
@@ -237,9 +203,9 @@ namespace NuGet.Protocol.Tests
             var minTime = GetRetryMinTime(MaxTries, SmallTimeout);
 
             var retryHandler = new HttpRetryHandler();
-            var testHandler = new TestHandler(handler);
+            var testHandler = new LambdaMessageHandler(handler);
             var httpClient = new HttpClient(testHandler);
-            var request = new HttpRetryHandlerRequest(httpClient, () => new HttpRequestMessage(HttpMethod.Get, TestUrl))
+            var request = new HttpRetryHandlerRequest(() => new HttpRequestMessage(HttpMethod.Get, TestUrl))
             {
                 MaxTries = MaxTries,
                 RequestTimeout = Timeout.InfiniteTimeSpan,
@@ -251,7 +217,7 @@ namespace NuGet.Protocol.Tests
             var timer = new Stopwatch();
             timer.Start();
 
-            using (await retryHandler.SendAsync(request, log, CancellationToken.None))
+            using (await retryHandler.SendAsync(request, httpClient, log, CancellationToken.None))
             {
             }
 
@@ -277,9 +243,9 @@ namespace NuGet.Protocol.Tests
             };
             
             var retryHandler = new HttpRetryHandler();
-            var testHandler = new TestHandler(handler);
+            var testHandler = new LambdaMessageHandler(handler);
             var httpClient = new HttpClient(testHandler);
-            var request = new HttpRetryHandlerRequest(httpClient, () => new HttpRequestMessage(HttpMethod.Get, TestUrl))
+            var request = new HttpRetryHandlerRequest(() => new HttpRequestMessage(HttpMethod.Get, TestUrl))
             {
                 MaxTries = MaxTries,
                 RequestTimeout = Timeout.InfiniteTimeSpan,
@@ -288,7 +254,7 @@ namespace NuGet.Protocol.Tests
             var log = new TestLogger();
 
             // Act
-            using (await retryHandler.SendAsync(request, log, CancellationToken.None))
+            using (await retryHandler.SendAsync(request, httpClient, log, CancellationToken.None))
             {
             }
 
@@ -309,9 +275,9 @@ namespace NuGet.Protocol.Tests
             };
 
             var retryHandler = new HttpRetryHandler();
-            var testHandler = new TestHandler(handler);
+            var testHandler = new LambdaMessageHandler(handler);
             var httpClient = new HttpClient(testHandler);
-            var request = new HttpRetryHandlerRequest(httpClient, () => new HttpRequestMessage(HttpMethod.Get, TestUrl))
+            var request = new HttpRetryHandlerRequest(() => new HttpRequestMessage(HttpMethod.Get, TestUrl))
             {
                 MaxTries = MaxTries,
                 RequestTimeout = Timeout.InfiniteTimeSpan,
@@ -320,7 +286,7 @@ namespace NuGet.Protocol.Tests
             var log = new TestLogger();
 
             // Act
-            using (var response = await retryHandler.SendAsync(request, log, CancellationToken.None))
+            using (var response = await retryHandler.SendAsync(request, httpClient, log, CancellationToken.None))
             {
                 // Assert
                 Assert.Equal(1, hits);
@@ -341,9 +307,9 @@ namespace NuGet.Protocol.Tests
             };
 
             var retryHandler = new HttpRetryHandler();
-            var testHandler = new TestHandler(handler);
+            var testHandler = new LambdaMessageHandler(handler);
             var httpClient = new HttpClient(testHandler);
-            var request = new HttpRetryHandlerRequest(httpClient, () => new HttpRequestMessage(HttpMethod.Get, TestUrl))
+            var request = new HttpRetryHandlerRequest(() => new HttpRequestMessage(HttpMethod.Get, TestUrl))
             {
                 MaxTries = MaxTries,
                 RequestTimeout = Timeout.InfiniteTimeSpan,
@@ -352,7 +318,7 @@ namespace NuGet.Protocol.Tests
             var log = new TestLogger();
 
             // Act
-            using (var response = await retryHandler.SendAsync(request, log, CancellationToken.None))
+            using (var response = await retryHandler.SendAsync(request, httpClient, log, CancellationToken.None))
             {
                 // Assert
                 Assert.Equal(1, hits);
@@ -380,9 +346,9 @@ namespace NuGet.Protocol.Tests
             };
 
             var retryHandler = new HttpRetryHandler();
-            var testHandler = new TestHandler(handler);
+            var testHandler = new LambdaMessageHandler(handler);
             var httpClient = new HttpClient(testHandler);
-            var request = new HttpRetryHandlerRequest(httpClient, () => new HttpRequestMessage(HttpMethod.Get, TestUrl))
+            var request = new HttpRetryHandlerRequest(() => new HttpRequestMessage(HttpMethod.Get, TestUrl))
             {
                 DownloadTimeout = TimeSpan.FromMilliseconds(expectedMilliseconds)
             };
@@ -390,7 +356,7 @@ namespace NuGet.Protocol.Tests
             var log = new TestLogger();
 
             // Act
-            using (var response = await retryHandler.SendAsync(request, log, CancellationToken.None))
+            using (var response = await retryHandler.SendAsync(request, httpClient, log, CancellationToken.None))
             using (var stream = await response.Content.ReadAsStreamAsync())
             {
                 var actual = await Assert.ThrowsAsync<IOException>(() => stream.CopyToAsync(destinationStream));
@@ -429,9 +395,9 @@ namespace NuGet.Protocol.Tests
             };
 
             var retryHandler = new HttpRetryHandler();
-            var testHandler = new TestHandler(handler);
+            var testHandler = new LambdaMessageHandler(handler);
             var httpClient = new HttpClient(testHandler);
-            var request = new HttpRetryHandlerRequest(httpClient, () => new HttpRequestMessage(HttpMethod.Get, TestUrl))
+            var request = new HttpRetryHandlerRequest(() => new HttpRequestMessage(HttpMethod.Get, TestUrl))
             {
                 MaxTries = MaxTries,
                 RequestTimeout = Timeout.InfiniteTimeSpan,
@@ -440,7 +406,7 @@ namespace NuGet.Protocol.Tests
             var log = new TestLogger();
 
             // Act
-            using (var response = await retryHandler.SendAsync(request, log, CancellationToken.None))
+            using (var response = await retryHandler.SendAsync(request, httpClient, log, CancellationToken.None))
             {
                 // Assert
                 Assert.True(sent503);
@@ -457,7 +423,7 @@ namespace NuGet.Protocol.Tests
                 var retryHandler = new HttpRetryHandler();
                 var countingHandler = new CountingHandler { InnerHandler = new HttpClientHandler() };
                 var httpClient = new HttpClient(countingHandler);
-                var request = new HttpRetryHandlerRequest(httpClient, () => new HttpRequestMessage(HttpMethod.Get, address))
+                var request = new HttpRetryHandlerRequest(() => new HttpRequestMessage(HttpMethod.Get, address))
                 {
                     MaxTries = 2,
                     RetryDelay = TimeSpan.Zero
@@ -466,6 +432,7 @@ namespace NuGet.Protocol.Tests
                 // Act
                 Func<Task> actionAsync = () => retryHandler.SendAsync(
                     request,
+                    httpClient, 
                     new TestLogger(),
                     CancellationToken.None);
 
@@ -490,28 +457,6 @@ namespace NuGet.Protocol.Tests
                 Hits++;
 
                 return base.SendAsync(request, cancellationToken);
-            }
-        }
-
-        private class TestHandler : HttpMessageHandler
-        {
-            private readonly Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> _handler;
-
-            public TestHandler(Func<HttpRequestMessage, HttpResponseMessage> handler)
-            {
-                _handler = (request, token) => Task.FromResult(handler(request));
-            }
-
-            public TestHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler)
-            {
-                _handler = handler;
-            }
-
-            protected override async Task<HttpResponseMessage> SendAsync(
-                HttpRequestMessage request,
-                CancellationToken cancellationToken)
-            {
-                return await _handler(request, cancellationToken);
             }
         }
     }

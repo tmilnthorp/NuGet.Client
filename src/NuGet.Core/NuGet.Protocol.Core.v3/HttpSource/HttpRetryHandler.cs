@@ -27,6 +27,7 @@ namespace NuGet.Protocol
         /// </remarks>
         public async Task<HttpResponseMessage> SendAsync(
             HttpRetryHandlerRequest request,
+            HttpClient httpClient,
             ILogger log,
             CancellationToken cancellationToken)
         {
@@ -46,6 +47,8 @@ namespace NuGet.Protocol
 
                 using (var requestMessage = request.RequestFactory())
                 {
+                    requestMessage.SetRequestTimeout(request.RequestTimeout);
+
                     var stopwatch = Stopwatch.StartNew();
                     string requestUri = requestMessage.RequestUri.ToString();
 
@@ -73,7 +76,7 @@ namespace NuGet.Protocol
                             requestUri));
 
                         // request.RequestTimeout?
-                        response = await request.HttpClient.SendAsync(requestMessage, request.CompletionOption, cancellationToken);
+                        response = await httpClient.SendAsync(requestMessage, request.CompletionOption, cancellationToken);
 
                         // Wrap the response stream so that the download can timeout.
                         if (response.Content != null)

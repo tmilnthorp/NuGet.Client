@@ -10,9 +10,19 @@ namespace NuGet.Protocol.Tests
 {
     internal class LambdaMessageHandler : HttpMessageHandler
     {
-        private readonly Func<HttpRequestMessage, HttpResponseMessage> _delegate;
+        private readonly Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> _delegate;
 
-        public LambdaMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> @delegate)
+        public LambdaMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> responseFactory)
+        {
+            if (responseFactory == null)
+            {
+                throw new ArgumentNullException(nameof(responseFactory));
+            }
+
+            _delegate = (request, _) => Task.FromResult(responseFactory(request));
+        }
+
+        public LambdaMessageHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> @delegate)
         {
             if (@delegate == null)
             {
@@ -24,7 +34,7 @@ namespace NuGet.Protocol.Tests
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            return Task.FromResult(_delegate(request));
+            return _delegate(request, cancellationToken);
         }
     }
 }
