@@ -49,7 +49,7 @@ namespace NuGet.PackageManagement.VisualStudio
             await NuGetVS.ProjectHelper.DoWorkInWriterLockAsync(
                 EnvDTEProject,
                 VsHierarchyUtility.ToVsHierarchy(EnvDTEProject),
-                buildProject => MicrosoftBuildEvaluationProjectUtility.AddImportStatement(buildProject, relativeTargetPath, location));
+                buildProject => MicrosoftBuildEvaluationProjectUtility.AddImportStatement(buildProject, relativeTargetPath, location, CommonResources.EnsureImportedMessage));
 
             // notify the project system of the change
             UpdateImportStamp(EnvDTEProject);

@@ -15,12 +15,13 @@ using Microsoft.VisualStudio.Shell.Interop;
 using NuGet.Frameworks;
 using NuGet.Packaging.Core;
 using NuGet.ProjectManagement;
+using NuGet.VisualStudio.Facade.Build;
 using EnvDTEProject = EnvDTE.Project;
 using EnvDTEProjectItems = EnvDTE.ProjectItems;
 using EnvDTEProperty = EnvDTE.Property;
 using Constants = NuGet.ProjectManagement.Constants;
-using MicrosoftBuildEvaluationProject = Microsoft.Build.Evaluation.Project;
-using MicrosoftBuildEvaluationProjectItem = Microsoft.Build.Evaluation.ProjectItem;
+//using MicrosoftBuildEvaluationProject = Microsoft.Build.Evaluation.Project;
+//using MicrosoftBuildEvaluationProjectItem = Microsoft.Build.Evaluation.ProjectItem;
 using ThreadHelper = Microsoft.VisualStudio.Shell.ThreadHelper;
 
 namespace NuGet.PackageManagement.VisualStudio

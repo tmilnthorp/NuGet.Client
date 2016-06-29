@@ -1407,7 +1407,7 @@ namespace NuGet.PackageManagement.VisualStudio
         internal static void AddImportStatement(EnvDTEProject project, string targetsPath, ImportLocation location)
         {
             // Need NOT be on the UI Thread
-            MicrosoftBuildEvaluationProjectUtility.AddImportStatement(AsMSBuildProject(project), targetsPath, location);
+            MicrosoftBuildEvaluationProjectUtility.AddImportStatement(AsMSBuildProject(project), targetsPath, location, CommonResources.EnsureImportedMessage);
         }
 
         internal static void RemoveImportStatement(EnvDTEProject project, string targetsPath)

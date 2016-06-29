@@ -3,20 +3,22 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
+using System.Globalization;
 using System.Reflection;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
+using Microsoft.VisualStudio.Shell;
 using NuGet.ProjectManagement;
 using MicrosoftBuildEvaluationProject = Microsoft.Build.Evaluation.Project;
 
-namespace NuGet.PackageManagement.VisualStudio
+namespace NuGet.VisualStudio.Facade.Build
 {
-    internal static class MicrosoftBuildEvaluationProjectUtility
+    internal static class MSBuildEvaluationProjectUtility
     {
         private const string ReferenceProjectItem = "Reference";
         private const string targetName = "EnsureNuGetPackageBuildImports";
+        private const string LogEntrySource = "NuGet Package Manager";
 
         internal static IEnumerable<Tuple<ProjectItem, AssemblyName>> GetAssemblyReferences(this MicrosoftBuildEvaluationProject msBuildEvaluationproject)
         {
@@ -29,7 +31,7 @@ namespace NuGet.PackageManagement.VisualStudio
                 }
                 catch (Exception exception)
                 {
-                    ExceptionHelper.WriteToActivityLog(exception);
+                    ActivityLog.LogError(LogEntrySource, exception.ToString());
                     // Swallow any exceptions we might get because of malformed assembly names
                 }
 

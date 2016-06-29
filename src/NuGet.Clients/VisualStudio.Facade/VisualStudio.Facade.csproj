@@ -68,12 +68,14 @@
     <Reference Include="System.ComponentModel.Composition" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Build\MSBuildEvaluationProjectUtility.cs" />
     <Compile Include="ProjectHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="project.json" />
   </ItemGroup>
+  <ItemGroup />
   <Choose>
     <When Condition="$(VisualStudioVersion)=='14.0'">
       <ItemGroup>
