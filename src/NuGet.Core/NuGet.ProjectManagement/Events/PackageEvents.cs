@@ -40,6 +40,16 @@ namespace NuGet.ProjectManagement
         /// </summary>
         public event EventHandler<PackageEventArgs> PackageReferenceRemoved;
 
+        /// <summary>
+        /// Raised when batch processing of install/ uninstall packages starts
+        /// </summary>
+        public event EventHandler StartBatchProcessing;
+
+        /// <summary>
+        /// Raised when batch processing of install/ uninstall packages ends
+        /// </summary>
+        public event EventHandler EndBatchProcessing;
+
         internal PackageEvents()
         {
         }
@@ -91,5 +101,16 @@ namespace NuGet.ProjectManagement
                 PackageReferenceRemoved(this, e);
             }
         }
+
+        internal void NotifyBatchStart()
+        {
+            StartBatchProcessing?.Invoke(this, EventArgs.Empty);
+        }
+
+        internal void NotifyBatchEnd()
+        {
+            EndBatchProcessing?.Invoke(this, EventArgs.Empty);
+        }
+
     }
 }
